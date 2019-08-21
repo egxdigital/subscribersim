@@ -1,8 +1,11 @@
-# Subscibersim
+# subscribersim
+
 > A simple program that emulates buying a yearly subscription for hosting websites.
 
-## Getting started
+subscribersim implements proration logic to handle mid-cycle subscription changes for a hypothetical website platform.
 
+## Getting started
+TBD
 
 ### Installation
 TBD
@@ -25,9 +28,7 @@ Clone repository
 ...
 
 ## Authors
-
 * Emille G. - *Initial work* - [Twitter](http://twitter.com/emilledigital), [Blog](https://egxdigital.wordpress.com)
 
 ## Acknowledgements
-
 TBD
