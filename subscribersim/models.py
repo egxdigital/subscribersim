@@ -21,6 +21,7 @@ class Customer():
         current_plan_renewal_date (TBD):
         current_plan_website_count (int)
     """
+    
 
     def __init__(self, name, password, email):
 
@@ -55,6 +56,8 @@ class Customer():
             # Set the current plan
             self.current_plan = Plan(name)
             self.current_plan_renewal_date = datetime_months_hence(now, 12)
+            self._init_table()
+            self._add_table_row()
 
         else:
             raise Exception("select plan")
@@ -78,7 +81,7 @@ class Customer():
             self.current_plan = Plan(name)
 
             # Set the new renewal date
-            self.current_plan_renewal_date = now
+            self.current_plan_renewal_date = datetime_months_hence(now, 12)
 
             # Calculate the amount spent to date while in previous plan
             prev = self.events[-1][0]
@@ -105,6 +108,7 @@ class Customer():
                 self.balances.append(new_plan_price)
 
             self.events.append((now, name))
+            self._add_table_row()
 
         else:
             raise Exception("move to plan")
@@ -157,16 +161,32 @@ class Customer():
         """Logs the refund amount when applicable"""
         self.refunds.append(bal)
 
+    
     def __str__(self):
-        #return f"customer: {self.name}, current plan: {self.current_plan}, active sites: {self.current_plan_website_count}, transactions: {len(self.events)}"
-
-        return tabulate(
-                        [
-                         ["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"],
-                         [self.name, self.current_plan, len(self.payments[1:]), self.spend[-1], self.refunds[-1], self.balances[-1]]
-                        ],
-                         headers="firstrow"
+        return f"customer: {self.name}, current plan: {self.current_plan}, active sites: {self.current_plan_website_count}, transactions: {len(self.events)}"
+    
+    
+    ROWS = []
+    
+    
+    def _add_table_row(self):
+        self.ROWS.append([self.name, self.current_plan.name, self.current_plan_renewal_date, 
+                          len(self.payments[1:]), self.payments[-1], self.spend[-1], self.refunds[-1], self.balances[-1]])
+    
+    
+    def _init_table(self):
+        self.ROWS.append(["customer", "plan", "renews on", "payments", "last payment", "last spend", "last refund", "balance"])
+        
+    
+    def print_table(self):
+        print (
+                tabulate(   
+                            #["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"],
+                            self.ROWS,
+                            
+                            headers="firstrow",
                         )
+              )
 
 
 class Plan():
@@ -210,25 +230,31 @@ class Website():
 
 
 if __name__ == '__main__':
-    terry = Customer("Terry Jeffords", "yoghurt", "terryjeffords@99.com")
-    # payments: 0, last payment: 0, current spend: 0, lastrefund 0, balance: 0
     
-    #print(tabulate([["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"]],headers="firstrow"))
-
+    # Event 1
+    # payments: 0, last payment: 0, current spend: 0, lastrefund 0, balance: 0
+    terry = Customer("Terry Jeffords", "yoghurt", "terryjeffords@99.com")
+    
+    
     # Event 2
-    terry.select_plan("Plus", datetime.now())
     # payments: 1, last payment: 99, current spend: 0, lastrefund 0, balance: 99
+    terry.select_plan("Plus", datetime.now())
+   
 
     # Event 3
-    terry.move_to_plan("Single", datetime_months_hence(datetime_get_last_event(terry), 2))
     # payments: 1, last payment: 99, current spend: 24.75, lastrefund 25.25, balance: 49
+    terry.move_to_plan("Single", datetime_months_hence(datetime_get_last_event(terry), 2))
+    
 
     # Event 4
-    terry.move_to_plan("Infinite", datetime_months_hence(datetime_get_last_event(terry), 1))
     # payments: 2, last payment: 208.17, current spend: 8.17, last refund 25.25, balance: 249
+    terry.move_to_plan("Infinite", datetime_months_hence(datetime_get_last_event(terry), 1))
+    
 
     # Event 5
-    terry.move_to_plan("Plus", datetime_months_hence(datetime_get_last_event(terry), 3))
     # payments: 2, last payment: 208.17, current spend: 62.25, refund 87.75, balance: 99
+    terry.move_to_plan("Plus", datetime_months_hence(datetime_get_last_event(terry), 3))
+    
+    terry.print_table()
     print(terry)
     
