@@ -1,8 +1,9 @@
-import time
+from tabulate import tabulate
+from helpers import *
 
 class Customer():
     """
-    Customer a name, a password an email address,
+    Customers have a name, a password an email address,
     a subscription and a subscription renewal date.
 
     A customer should be able to subscribe to
@@ -11,94 +12,106 @@ class Customer():
     plan.
 
     Attributes:
-        name (string): customer's first name
-        password (string):
-        email (string):
-        order_history (list:tup):
-        websites (list:Website):
-        current_plan (Plan):
-        current_plan_renewal_date ():
+        name (string): customer's full name
+        password (string): customer's password
+        email (string): customer's email
+        events (list:tup): list of transactions
+        websites (list:Website): list of website objects
+        current_plan (Plan): current active plan
+        current_plan_renewal_date (TBD):
         current_plan_website_count (int)
-
-    Methods:
-        select_plan:    Subscribe to a plan after becoming
-                        a customer.
-        move_to_plan:   Change plan if already subscribed
-        add_website:    Add website to plan
-        remove_website: Remove website from plan
-        update_website: Change domain or database option
-        _update_order_history
     """
 
     def __init__(self, name, password, email):
 
-        self.order_history = []
-        self.websites = []
+        self.events = [0]
+        self.balances = [0]
+        self.payments = [0]
+        self.refunds = [0]
+        self.spend = [0]
+        self.websites = [0]
         self.current_plan = None
         self.current_plan_website_count = 0
+        self.current_plan_renewal_date = None
         self.name = name
         self.password = password
         self.email = email
 
 
-    def __str__(self):
+    def select_plan(self, name, now=datetime_now()):
+        """ Select a plan for a new customer.
 
-        return f""" Customer: {self.name},
-                    Current plan: {self.current_plan},
-                    Active sites: {self.current_plan_website_count},
-                    Transactions: {len(self.order_history)},
-                """
-
-
-    def _update_order_history(self,name,price,tim):
-        """
-        Logs every purchase or change of subscription
-        with plan name, price and timestamp.
-        """
-
-        self.order_history.append((name,price,tim))
-
-
-    def select_plan(self, name='Subscription'):
-        """
-        Customer can select a plan if they have no
-        current plan.
+        select_plan updates the payments, balances and events buffers
+        then sets the current plan and renewal date for the customer.
         """
 
         if self.current_plan == None:
+            # Log payment, update balances, update events
+            payment = self._get_price(name)
+            self.payments.append(payment)
+            self.balances.append(payment)
+            self.events.append((now, name))
+
+            # Set the current plan
             self.current_plan = Plan(name)
-            tim = time.time()
-            self._update_order_history(
-                                        self.current_plan.name,
-                                        self.current_plan.price,
-                                        tim,
-                                      )
-            return
-        self.current_plan = self.current_plan
+            self.current_plan_renewal_date = datetime_months_hence(now, 12)
+
+        else:
+            raise Exception("select plan")
 
 
-    def move_to_plan(self, name):
+    def move_to_plan(self, name, now=datetime_now()):
+        """ Move customer to a different plan if they are subscribed.
+
+        move_to_plan takes a desired plan name, and a timestamp and evaluates
+        the proration on the mid-cycle subscription change.
         """
-        Customer can move to a different plan if
-        they currently have a plan.
-        """
+        seconds_in_year = get_seconds_in_current_year(now)
 
+        # Verify that we already have a plan
+        # Verify that we are not trying to move to the same plan
         current = self.current_plan
         plan_name = self.current_plan.name
 
         if current != None and plan_name != name:
+            # Select the plan
             self.current_plan = Plan(name)
-            tim = time.time()
-            self._update_order_history(
-                                        self.current_plan.name,
-                                        self.current_plan.price,
-                                        tim,
-                                      )
-            return
-        print ("Plan not moved")
+
+            # Set the new renewal date
+            self.current_plan_renewal_date = now
+
+            # Calculate the amount spent to date while in previous plan
+            prev = self.events[-1][0]
+            old_price = self._get_price(plan_name)
+            elapsed = datetime_to_time(now) - datetime_to_time(prev)
+            amount_spent = self._get_current_spend(old_price,seconds_in_year,elapsed)
+            self.spend.append(amount_spent)
+
+            # Proration logic
+            current_bal = self.balances[-1] - amount_spent
+            new_plan_price = self._get_price(name)
+
+            if (new_plan_price == current_bal):
+                self.balances.append(new_plan_price)
+
+            elif (new_plan_price > current_bal):
+                payment_due = round( (new_plan_price - current_bal), 2 )
+                self.payments.append(payment_due)
+                self.balances.append(new_plan_price)
+
+            else:
+                balance = round( (self.balances[-1] - amount_spent), 2 )
+                self._refund(balance - new_plan_price)
+                self.balances.append(new_plan_price)
+
+            self.events.append((now, name))
+
+        else:
+            raise Exception("move to plan")
 
 
     def add_website_to_current_plan(self, url, has_database):
+       
 
         site_count = self.current_plan_website_count
         max_sites = self.current_plan.max_sites
@@ -123,9 +136,41 @@ class Customer():
                 self.websites.remove(website)
 
 
-class Plan(object):
-    """
-    Has a name, a price, and a number of websites allowance.
+    def _add_event(self,name,price,tim):
+        """ Logs every purchase or change of subscription
+        with plan name, price and timestamp.
+        """
+        self.events.append((name,price,tim))
+
+
+    def _get_price(self, name):
+        """Returns the plan price from Plan.plan (dict)"""
+        return Plan.plans[name][1]
+
+
+    def _get_current_spend(self, old, tp, e):
+        """Returns the amount spent since the last plan purchase"""
+        return round( ((old / tp) * e), 2 )
+
+
+    def _refund(self, bal):
+        """Logs the refund amount when applicable"""
+        self.refunds.append(bal)
+
+    def __str__(self):
+        #return f"customer: {self.name}, current plan: {self.current_plan}, active sites: {self.current_plan_website_count}, transactions: {len(self.events)}"
+
+        return tabulate(
+                        [
+                         ["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"],
+                         [self.name, self.current_plan, len(self.payments[1:]), self.spend[-1], self.refunds[-1], self.balances[-1]]
+                        ],
+                         headers="firstrow"
+                        )
+
+
+class Plan():
+    """Has a name, a price, and a number of websites allowance.
 
     Attributes:
         name (string):
@@ -162,3 +207,28 @@ class Website():
 
     def __str__(self):
         return f'Site located at {self.url}'
+
+
+if __name__ == '__main__':
+    terry = Customer("Terry Jeffords", "yoghurt", "terryjeffords@99.com")
+    # payments: 0, last payment: 0, current spend: 0, lastrefund 0, balance: 0
+    
+    #print(tabulate([["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"]],headers="firstrow"))
+
+    # Event 2
+    terry.select_plan("Plus", datetime.now())
+    # payments: 1, last payment: 99, current spend: 0, lastrefund 0, balance: 99
+
+    # Event 3
+    terry.move_to_plan("Single", datetime_months_hence(datetime_get_last_event(terry), 2))
+    # payments: 1, last payment: 99, current spend: 24.75, lastrefund 25.25, balance: 49
+
+    # Event 4
+    terry.move_to_plan("Infinite", datetime_months_hence(datetime_get_last_event(terry), 1))
+    # payments: 2, last payment: 208.17, current spend: 8.17, last refund 25.25, balance: 249
+
+    # Event 5
+    terry.move_to_plan("Plus", datetime_months_hence(datetime_get_last_event(terry), 3))
+    # payments: 2, last payment: 208.17, current spend: 62.25, refund 87.75, balance: 99
+    print(terry)
+    
