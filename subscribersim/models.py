@@ -49,10 +49,11 @@ class Customer():
 
         if self.current_plan == None:
             # Log payment, update balances, update events
+            type = "start"
             payment = self._get_price(name)
             self.payments.append(payment)
             self.balances.append(payment)
-            self.events.append((now, name))
+            self.events.append((now, name, type))
 
             # Set the current plan
             self.current_plan = Plan(name)
@@ -87,27 +88,31 @@ class Customer():
             self.spend.append(amount_spent)
 
             # Proration logic
-            current_bal = self.balances[-1] - amount_spent
+            current_bal = round ((self.balances[-1] - amount_spent), 2 )
             new_plan_price = self._get_price(name)
 
+            # Transfer
             if (new_plan_price == current_bal):
                 self.balances.append(new_plan_price)
 
+            # Upgrade
             elif (new_plan_price > current_bal):
+                type = "upgrade"
                 payment_due = round( (new_plan_price - current_bal), 2 )
                 self.payments.append(payment_due)
                 self.balances.append(new_plan_price)
 
+            # Downgrade
             else:
-                balance = round( (self.balances[-1] - amount_spent), 2 )
-                self._refund(balance - new_plan_price)
+                type = "downgrade"
+                self._refund(current_bal - new_plan_price)
                 self.balances.append(new_plan_price)
 
             # Select the plan
             self.current_plan = Plan(name)
             # Set the new renewal date
             self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
-            self.events.append((now, name))
+            self.events.append((now, name, type))
             self._add_table_row()
 
         else:
@@ -166,12 +171,12 @@ class Customer():
 
     def _init_table(self):
         """Initializes the header row of a table when select_plan is called"""
-        self.ROWS.append(["customer", "plan", "renews on", "payments", "last payment", "last spend", "last refund", "balance"])
+        self.ROWS.append(["customer", "event", "plan", "renews on", "payments", "last payment", "last spend", "last refund", "balance"])
 
 
     def _add_table_row(self):
         """Creates a table row when select_plan and move_to_plan are called"""
-        self.ROWS.append([self.name, self.current_plan.name, self.plan_renewal_date,
+        self.ROWS.append([self.name, self.events[-1][2], self.current_plan.name, self.plan_renewal_date,
                           len(self.payments[1:]), self.payments[-1], self.spend[-1], self.refunds[-1], self.balances[-1]])
 
 
