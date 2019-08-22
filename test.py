@@ -10,7 +10,7 @@ class TestCustomer(unittest.TestCase):
 
     def test_new_customer(self):
         """Creates a new customer."""
-        person = Customer("person Jeffords", "yoghurt", "tjeffords@99.com")
+        person = Customer("Terry Jeffords", "yoghurt", "tjeffords@99.com")
 
         self.assertTrue(person.name,"Customer name not provided")
         self.assertTrue(person.password, "Customer password not provided")
@@ -41,22 +41,22 @@ class TestCustomer(unittest.TestCase):
         Verifies that the customer's old plan is recorded on the order history.
         Verifies that only two transactions are shown on the order history.
         """
-        old_plan = "Single"
-        new_plan = "Plus"
+        oldplan = "Single"
+        newplan = "Plus"
 
         person = Customer("Rosa Diaz", "summerskiss", "rosadiaz@99.com")
-        person.select_plan(old_plan)
-        person.move_to_plan(new_plan)
+        person.select_plan(oldplan)
+        person.move_to_plan(newplan)
 
-        self.assertEqual(person.current_plan.name, new_plan, "Plan did not move")
-        self.assertEqual(person.events[1][1], old_plan, "Plan not selected")
-        self.assertEqual(person.events[-1][1], new_plan, "Plan not moved")
+        self.assertEqual(person.current_plan.name, newplan, "Plan did not move")
+        self.assertEqual(person.events[1][1], oldplan, "Plan not selected")
+        self.assertEqual(person.events[-1][1], newplan, "Plan not moved")
         self.assertEqual(len(person.events[1:]), 2, "Transactions incorrect")
         #person.print_table()
 
 
     def test_add_website(self):
-        """Creates a new custohelpers.mer, selects a plan, adds one website.
+        """Creates a new customer, selects a plan, adds one website.
 
         Verifies that the customer's website was created.
         Verifies that customer's website list has only one entry.
@@ -127,7 +127,29 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(person.balances[-1],person.current_plan.price,"Incorrent balance")
         self.assertEqual(person.balances[-1], (person.balances[-2] - person.spend[-1] - person.refunds[-1]), "Refund incorrect")
 
-        person.print_table()
+        #person.print_table()
+
+
+    def test_add_websites_then_downgrade(self):
+        """Creates a new customer, selects a plan, adds multiple websites then downgrades.
+
+        Verifies whether customer active websites exceed max allowed after downgrade.
+        """
+        oldplan = "Infinite"
+        newplan = "Single"
+
+        person = Customer("Charles Boyle", "dianeweist", "charlesboyle@99.com")
+        person.select_plan(oldplan)
+
+        person.add_website("foodie.com", False)
+        person.add_website("foodcentral.com", False)
+        person.add_website("foodfanatic.com", False)
+        person.add_website("foodheaven.com", False)
+
+        person.move_to_plan(newplan)
+
+        self.assertEqual(person.website_count, Plan.plans[newplan][0], "Max sites exceeded")
+
 
     def test_customer_upgrade(self):
         """Creates a customer, selects a plan and moves to different plans within a year.
@@ -135,7 +157,6 @@ class TestCustomer(unittest.TestCase):
         Verifies that no refund is applicable.
         Verifies that payment after upgrade = (new plan price  - previous balance - last spend)
         """
-
         # Customer sign up and select a plan
         start_plan = "Single"
         end_plan = "Infinite"
@@ -159,7 +180,7 @@ class TestCustomer(unittest.TestCase):
         self.assertEqual(person.refunds[-1], 0, "Refund not applicable")
         self.assertEqual(person.payments[-1], round ((end_price - (person.balances[-2] - person.spend[-1])), 2), "Payment incorrect")
 
-        person.print_table()
+        #person.print_table()
 
 
 if (__name__ == '__main__'):
