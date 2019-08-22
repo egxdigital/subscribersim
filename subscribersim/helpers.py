@@ -9,10 +9,16 @@ def get_seconds_a_year_from_now():
     return datetime_to_time(THEN) - datetime_to_time(NOW)
 
 
-def get_seconds_in_current_year(NOW):
+def get_seconds_in_current_year(datetimeobj):
     """Returns the number of seconds in a given year"""
+    NOW = datetimeobj
     THEN = NOW + relativedelta(months=+12)
     return datetime_to_time(THEN) - datetime_to_time(NOW)
+
+
+def get_seconds_difference(then, now):
+    """Returns the number of seconds between two datetime objects"""
+    return datetime_to_time(then) - datetime_to_time(now)
 
 
 def time_to_datetime(tim):
