@@ -1,3 +1,22 @@
+"""Helpers
+
+This module contains helper functions for handling datetime objects and
+time objects. It provides functions for computing dates from a certain
+period and the number of seconds between two dates.
+
+Example:
+
+        seconds = get_seconds_a_year_from_now()
+        seconds_in_current_year = get_seconds_in_current_year(datetime_now())
+
+Attributes:
+    No module level variables.
+
+Todo:
+    * Define method that allows interactive user to specify a datetime object to the second.
+
+"""
+
 import time
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
