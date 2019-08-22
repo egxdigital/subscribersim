@@ -61,14 +61,14 @@ class TestCustomer(unittest.TestCase):
         Verifies that the customer's website was created.
         Verifies that customer's website list has only one entry.
         """
-        desired_plan = "Plus"
+        desired_plan = "Single"
 
         person = Customer("Raymond Holt", "gerdieforlife", "cptrayholt@99.com")
         person.select_plan(desired_plan)
         person.add_website_to_current_plan("weichelbrauniac.com", False)
 
         self.assertTrue(person.websites[-1].url,"Website not created")
-        self.assertTrue(person.websites, "Website not added")
+        self.assertEqual(len(person.websites), 1, "Site not on list")
         #print (person)
 
 
@@ -80,16 +80,19 @@ class TestCustomer(unittest.TestCase):
         Verifies that the website count is zero after removal
         """
 
-        desired_plan = "Single"
+        desired_plan = "Infinite"
 
         person = Customer("Amy Santiago", "deweydecimal", "amysantiago@99.com")
         person.select_plan(desired_plan)
+
         person.add_website_to_current_plan("laminateheaven.com", False)
-        self.assertEqual(person.websites[-1].url,"http://laminateheaven.com","Website not removed")
+        self.assertEqual(person.current_plan_website_count, 1, "Website not added")
         person.remove_website("http://laminateheaven.com")
+
         urls = [w.url for w in person.websites]
         self.assertNotIn("http://laminateheaven.com",urls,"Website not removed")
-        #$person.print_table()
+        self.assertEqual(person.current_plan_website_count, 0, "Website not removed")
+        #person.print_table()
 
 
     def test_customer_downgrade(self):
