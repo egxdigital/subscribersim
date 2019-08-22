@@ -1,30 +1,59 @@
+"""Models
+
+This module contains the models for this simple subscription system.
+When a customer moves to a new plan, a refund or charge is computed
+and the customer's balance is updated.
+
+Example:
+
+        jake = models.Customer(fullname, password, email)
+        jake.select_plan(start_plan, datetimeobj)
+        jake.add_website(website, bool)
+        jake.move_to_plan(end_plan, relativedeltaobj)
+
+Attributes:
+    No module level variables.
+
+Todo:
+    * Change event tuple to namedtuple to benefit from field names
+    * Initialize buffers with empty list instead of zero (will simplify references to the list)
+
+"""
+
 from tabulate import tabulate
 import helpers
 
 class Customer():
     """
-    Customers have a name, a password an email address,
-    a subscription and a subscription renewal date.
+    Customers have a name, a password an email address, a subscription and a
+    subscription renewal date.
 
-    A customer should be able to subscribe to
-    plan, move from a plan to another and manage
-    websites (add/update/remove) according to his
-    plan.
+    A customer should be able to subscribe to plan, move from a plan to another
+    and manage websites (add/update/remove) according to their plan.
+
+    Args:
+        name (string)                       : Customer's full name
+        password (string)                   : Customer's password
+        email (string)                      : Customer's email
 
     Attributes:
-        name (string)                       : customer's full name
-        password (string)                   : customer's password
-        email (string)                      : customer's email
-        events (list:tup(datetime,str))     : list of select_plan and move_to_plan events
-        websites (list:Website)             : list of website objects
-        current_plan (obj:Plan)             : current active plan
-        plan_renewal_date (obj:datetime)    : date one year from the date of last purchase
-        website_count (int)                 : number of active websites
+        current_plan (obj:Plan)             : Current active plan
+        plan_renewal_date (obj:datetime)    : Date one year from the date of last purchase
+
+        events (list:tup(datetime,str))     : List of select_plan and move_to_plan events
+        websites (list:Website)             : List of website objects
+        website_count (int)                 : Number of active websites
+        events (list:tup(datetime,str,str)) : List of events including their timestamp and type
+        balances (list:float)               : Customer's account value after each event
+        payments (list:float)               : Each payment is added to this list
+        refunds (list:float)                : Each refund is added to this list
+        spend (list:float)                  : The current spend at the time of each plan change
+        ROWS (list:list)                    : Input for the tabulate method
+
     """
 
-
     def __init__(self, name, password, email):
-
+        # Buffers and counters
         self.events = [0]
         self.balances = [0]
         self.payments = [0]
@@ -32,19 +61,27 @@ class Customer():
         self.spend = [0]
         self.websites = []
         self.ROWS = []
-        self.current_plan = None
         self.website_count = 0
-        self.plan_renewal_date = None
+        # Attributes
         self.name = name
         self.password = password
         self.email = email
+        self.current_plan = None
+        self.plan_renewal_date = None
 
 
     def select_plan(self, name, now=helpers.datetime_now()):
         """ Select a plan for a new customer.
 
-        select_plan updates the payments, balances and events buffers
-        then sets the current plan and renewal date for the customer.
+        select_plan updates the payments, balances and events buffers then sets the
+        current plan and renewal date for the customer.
+
+        Args:
+            name (string)  : Name of the desired plan.
+            now (datetime) : A round datetime object returned by helpers.datetime_now()
+
+        Returns:
+            True if successful. Raises an exception otherwise.
         """
 
         if self.current_plan == None:
@@ -60,7 +97,7 @@ class Customer():
             self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
             self._init_table()
             self._add_table_row()
-
+            return True
         else:
             raise Exception("select plan")
 
@@ -71,7 +108,15 @@ class Customer():
         move_to_plan takes a desired plan name, and a timestamp and evaluates
         the proration on the mid-cycle subscription change. If the customer
         has more websites than maximum at the time of downgrade, the most recent
-        sites are removed first.
+        sites are removed first. In the real world the customer would be prompted
+        before website deletion after downgrade.
+
+        Args:
+            name (string)  : Name of the desired plan.
+            now (datetime) : A round datetime object returned by helpers.datetime_now()
+
+        Returns:
+            True if successful. Raises an exception otherwise.
         """
         seconds_in_year = helpers.get_seconds_in_current_year(now)
 
@@ -107,7 +152,6 @@ class Customer():
             # Downgrade
             else:
                 type = "downgrade"
-
                 # Reduce the number of websites if greater than desired plan max
                 site_count = self.website_count
                 max_sites_allowed = Plan.plans[name][0]
@@ -127,13 +171,22 @@ class Customer():
             self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
             self.events.append((now, name, type))
             self._add_table_row()
+            return True
 
         else:
             raise Exception("move to plan")
 
 
     def add_website(self, url, has_database):
-        """Adds a website given a domain name and a database option"""
+        """Adds a website given a domain name and a database option
+
+        Args:
+            url (string)        : URL in the form 'domain.com'
+            has_database (bool) : If True, 'https://' will prefix the URL else 'http://'
+
+        Returns:
+            True if successful. Raises an exception otherwise.
+        """
         site_count = self.website_count
         max_sites = self.current_plan.max_sites
 
@@ -142,10 +195,18 @@ class Customer():
 
         self.websites.append(Website(self, url, has_database))
         self.website_count += 1
+        return True
 
 
     def remove_website(self, name):
-        """Removes website from the list of websites given the full url"""
+        """Removes website from the list of websites given the full url
+
+        Args:
+            name (string)        : Full URL in the form http://domain.com
+
+        Returns:
+            True if successful. Raises an exception otherwise.
+        """
         site_count = self.website_count
         max_sites = self.current_plan.name[0]
 
@@ -156,6 +217,13 @@ class Customer():
             if website.url == name:
                 self.websites.remove(website)
                 self.website_count -= 1
+
+        return True
+
+
+    def print_table(self):
+        """Prints the table created by _init_table and _add_table_row"""
+        print ("\n\n", tabulate(self.ROWS, headers="firstrow",),"\n\n")
 
 
     def __str__(self):
@@ -168,7 +236,7 @@ class Customer():
 
 
     def _get_price(self, name):
-        """Returns the plan price from Plan.plan (dict)"""
+        """Returns the plan price from Plan.plan(dict)"""
         return Plan.plans[name][1]
 
 
@@ -193,23 +261,16 @@ class Customer():
                           len(self.payments[1:]), self.payments[-1], self.spend[-1], self.refunds[-1], self.balances[-1]])
 
 
-    def print_table(self):
-        """Prints the table created by _init_table and _add_table_row"""
-        print ("\n\n",
-                tabulate(
-                            #["customer", "plan", "payments", "last payment", "last spend", "last refund", "balance"],
-                            self.ROWS,
-
-                            headers="firstrow",
-                        )
-              )
-
 
 class Plan():
     """Plans have a name, a price, and a limited number of websites.
 
+    Args:
+        name (str)      : 'Single', 'Plus', or 'Infinite'
+
     Attributes:
-        name (string)   : Name of the plan (Single, Plus, Infinite)
+        plans (dict)    : Contains price options and max allowed sites
+        name (string)   : Name of the plan
         price (float)   : Price in dollars
         max_sites (int) : Number of websites allowed
     """
@@ -231,13 +292,19 @@ class Plan():
 class Website():
     """ Websites have an URL, a database option and a customer.
 
+    Websites are created by customers with Customer.add_website()
+
+    Args:
+        domain_name (str)       : URL in the form 'domain.com'
+        customerobj (Customer)  : Customer name is read from Customer object
+        has_database (bool)     : If True, 'https://' will prefix the URL else 'http://'
+
     Attributes:
-        url (str)           : Domain name of website
-        has_database (bool) : Database option
-        customer: (str)     : Customer's full name
+        url (str)               : Full URL in the form http://domain.com
+        customer (str)          : Taken from Customer object
+        has_database (bool)     : True if database is required, False otherwises
     """
-    def __init__(self, customerobj, domain_name, has_database):
-        """Takes a domain name in the form name.com and database option and sets url"""
+    def __init__(self, customerobj, domain_name, has_database=False):
         self.database = has_database
         self.customer = customerobj.name
 
@@ -245,21 +312,10 @@ class Website():
             self.url = "https://" + domain_name
         self.url = "http://" + domain_name
 
+
     def __str__(self):
         return f'{self.url} owned by: {self.customer}'
 
 
 if __name__ == '__main__':
-    person = Customer("Amy Santiago", "deweydecimal", "amysantiago@99.com")
-    person.select_plan("Infinite")
-    person.add_website("laminateheaven.com", False)
-    person.add_website("smallbookstore.com", False)
-    person.add_website("syntaxandsemantics.com", False)
-    person.add_website("crosswordcrazy.com", False)
-
-    person.move_to_plan("Single")
-
-    print (person.website_count)
-
-    for site in person.websites:
-        print(site)
+    pass
