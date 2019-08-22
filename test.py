@@ -55,7 +55,7 @@ class TestCustomer(unittest.TestCase):
         #person.print_table()
 
 
-    def test_add_website_to_current_plan(self):
+    def test_add_website(self):
         """Creates a new custohelpers.mer, selects a plan, adds one website.
 
         Verifies that the customer's website was created.
@@ -65,7 +65,7 @@ class TestCustomer(unittest.TestCase):
 
         person = Customer("Raymond Holt", "gerdieforlife", "cptrayholt@99.com")
         person.select_plan(desired_plan)
-        person.add_website_to_current_plan("weichelbrauniac.com", False)
+        person.add_website("weichelbrauniac.com", False)
 
         self.assertTrue(person.websites[-1].url,"Website not created")
         self.assertEqual(len(person.websites), 1, "Site not on list")
@@ -85,7 +85,7 @@ class TestCustomer(unittest.TestCase):
         person = Customer("Amy Santiago", "deweydecimal", "amysantiago@99.com")
         person.select_plan(desired_plan)
 
-        person.add_website_to_current_plan("laminateheaven.com", False)
+        person.add_website("laminateheaven.com", False)
         self.assertEqual(person.website_count, 1, "Website not added")
         person.remove_website("http://laminateheaven.com")
 
