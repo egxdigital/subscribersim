@@ -1,6 +1,5 @@
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "subscribersim"))
-import datetime
 import unittest
 from subscribersim.models import Customer, Plan
 import helpers
@@ -26,11 +25,12 @@ class TestCustomer(unittest.TestCase):
         """
         desired_plan = "Infinite"
 
+
         person = Customer("Jake Peralta", "diehardfan", "jperaltiago@99.com")
         person.select_plan(desired_plan)
 
         self.assertEqual(person.current_plan.name, desired_plan, "Plan not selected")
-        self.assertEqual(len(person.events[1:]), 1, "Transactions incorrect")
+        self.assertEqual(len(person.events[1:]), 1, "Event count incorrect")
         self.assertEqual(person.events[-1][1], desired_plan, "Plan not selected")
         #print (person)
 
@@ -86,12 +86,12 @@ class TestCustomer(unittest.TestCase):
         person.select_plan(desired_plan)
 
         person.add_website_to_current_plan("laminateheaven.com", False)
-        self.assertEqual(person.current_plan_website_count, 1, "Website not added")
+        self.assertEqual(person.website_count, 1, "Website not added")
         person.remove_website("http://laminateheaven.com")
 
         urls = [w.url for w in person.websites]
         self.assertNotIn("http://laminateheaven.com",urls,"Website not removed")
-        self.assertEqual(person.current_plan_website_count, 0, "Website not removed")
+        self.assertEqual(person.website_count, 0, "Website not removed")
         #person.print_table()
 
 
@@ -108,7 +108,7 @@ class TestCustomer(unittest.TestCase):
         end_plan = "Single"
         start_price = Plan.plans[start_plan][1]
         end_price = Plan.plans[end_plan][1]
-        NOW = datetime.datetime.now()
+        NOW = helpers.datetime_now()
 
         person = Customer("Terry Jeffords", "yoghurt", "terryjeffords@99.com")
         person.select_plan(start_plan, NOW)
@@ -141,7 +141,7 @@ class TestCustomer(unittest.TestCase):
         end_plan = "Infinite"
         start_price = Plan.plans[start_plan][1]
         end_price = Plan.plans[end_plan][1]
-        NOW = datetime.datetime.now()
+        NOW = helpers.datetime_now()
 
         person = Customer("Amy Santiago", "deweydecimal", "amysantiago@99.com")
         person.select_plan(start_plan, NOW)
