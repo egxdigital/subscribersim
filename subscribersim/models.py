@@ -69,7 +69,9 @@ class Customer():
         """ Move customer to a different plan if they are subscribed.
 
         move_to_plan takes a desired plan name, and a timestamp and evaluates
-        the proration on the mid-cycle subscription change.
+        the proration on the mid-cycle subscription change. If the customer
+        has more websites than maximum at the time of downgrade, the most recent
+        sites are removed first.
         """
         seconds_in_year = helpers.get_seconds_in_current_year(now)
 
@@ -105,11 +107,22 @@ class Customer():
             # Downgrade
             else:
                 type = "downgrade"
+
+                # Reduce the number of websites if greater than desired plan max
+                site_count = self.website_count
+                max_sites_allowed = Plan.plans[name][0]
+                if site_count > max_sites_allowed:
+                    for _ in range(site_count - max_sites_allowed):
+                        self.websites.pop()
+                        self.website_count -= 1
+
+                # Refund customer and reset balance
                 self._refund(current_bal - new_plan_price)
                 self.balances.append(new_plan_price)
 
-            # Select the plan
+            # Set the plan
             self.current_plan = Plan(name)
+
             # Set the new renewal date
             self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
             self.events.append((now, name, type))
@@ -239,12 +252,14 @@ class Website():
 if __name__ == '__main__':
     person = Customer("Amy Santiago", "deweydecimal", "amysantiago@99.com")
     person.select_plan("Infinite")
-    person.add_website_to_current_plan("laminateheaven.com", False)
-    person.add_website_to_current_plan("smallbookstore.com", False)
-    person.add_website_to_current_plan("syntaxandsemantics.com", False)
-    person.add_website_to_current_plan("crosswordcrazy.com", False)
-    person.remove_website("http://crosswordcrazy.com")
+    person.add_website("laminateheaven.com", False)
+    person.add_website("smallbookstore.com", False)
+    person.add_website("syntaxandsemantics.com", False)
+    person.add_website("crosswordcrazy.com", False)
+
+    person.move_to_plan("Single")
 
     print (person.website_count)
+
     for site in person.websites:
         print(site)
