@@ -29,7 +29,8 @@ if (__name__ == '__main__'):
     # Jake takes the infinite plan and three websites.
     # Jake is not known for being good with his finances.
     jake = models.Customer("Jake Peralta", "diehardfan", "@jakeperalta99.com")
-    jake.select_plan(start_jak, helpers.datetime_now())
+    print (jake)
+    jake.select_plan(start_jak, helpers.datetime_now()) # 249 0 0 249
     jake.add_website("superdupercop.com", True)
     jake.add_website("iamjohnmclane.com", False)
     jake.add_website("iheartpuzzles.com", False)
@@ -42,9 +43,10 @@ if (__name__ == '__main__'):
     jake.move_to_plan("Plus", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 2))
     jake.add_website("iamjohnmclane.com", False)
     jake.add_website("iheartpuzzles.com", False)
+    print (jake)
 
     # Jake runs out of cash and decides to go back to the Single plan
     jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
+    print (jake)
 
     jake.print_table()
-    print (jake)
