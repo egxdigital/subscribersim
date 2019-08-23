@@ -40,7 +40,7 @@ class Customer():
         current_plan (obj:Plan)             : Current active plan
         plan_renewal_date (obj:datetime)    : Date one year from the date of last purchase
 
-        events (list:tup(datetime,str))     : List of select_plan and move_to_plan events
+        events (list:tup(datetime,str,str)) : List of events of form (datetime, str, str)
         websites (list:Website)             : List of website objects
         website_count (int)                 : Number of active websites
         events (list:tup(datetime,str,str)) : List of events including their timestamp and type
@@ -134,7 +134,7 @@ class Customer():
             amount_spent = self._get_current_spend(old_price,seconds_in_year,elapsed)
             self.spend.append(amount_spent)
 
-            # Proration logic
+            # PRORATION LOGIC
             current_bal = round ((self.balances[-1] - amount_spent), 2 )
             new_plan_price = self._get_price(name)
 
@@ -168,16 +168,19 @@ class Customer():
             self.current_plan = Plan(name)
 
             # Set the new renewal date
-            self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
+            self._set_renewal_date(now)
+
+            # Queue the event and update the table
             self.events.append((now, name, type))
             self._add_table_row()
+
             return True
 
         else:
             raise Exception("move to plan")
 
 
-    def add_website(self, url, has_database):
+    def add_website(self, url, has_database, now=helpers.datetime_now()):
         """Adds a website given a domain name and a database option
 
         Args:
@@ -198,7 +201,7 @@ class Customer():
         return True
 
 
-    def remove_website(self, name):
+    def remove_website(self, name, now=helpers.datetime_now()):
         """Removes website from the list of websites given the full url
 
         Args:
@@ -230,6 +233,21 @@ class Customer():
         return f"\ncustomer: {self.name}\ncurrent plan: {self.current_plan}\nactive sites: {self.website_count}\nevents: {len(self.events[1:])}\nlast spend:{self.spend[-1]}"
 
 
+    def _init_table(self):
+        """Initializes the header row of a table when select_plan is called"""
+        self.ROWS.append(["customer", "event", "plan", "renews on", "websites", "payments", "last payment", "last spend", "last refund", "balance"])
+
+
+    def _add_table_row(self):
+        """Creates a table row when select_plan and move_to_plan are called"""
+        self.ROWS.append([self.name, self.events[-1][2], self.current_plan, self.plan_renewal_date, self.website_count,
+                          len(self.payments[1:]), self.payments[-1], self.spend[-1], self.refunds[-1], self.balances[-1]])
+
+
+    def _set_renewal_date(self,now):
+        self.plan_renewal_date = helpers.datetime_months_hence(now, 12)
+
+
     def _add_event(self,name,price,tim):
         """ Logs every purchase or change of subscription with plan name, price and timestamp."""
         self.events.append((name,price,tim))
@@ -248,17 +266,6 @@ class Customer():
     def _refund(self, bal):
         """Logs the refund amount when applicable"""
         self.refunds.append(bal)
-
-
-    def _init_table(self):
-        """Initializes the header row of a table when select_plan is called"""
-        self.ROWS.append(["customer", "event", "plan", "renews on", "payments", "last payment", "last spend", "last refund", "balance"])
-
-
-    def _add_table_row(self):
-        """Creates a table row when select_plan and move_to_plan are called"""
-        self.ROWS.append([self.name, self.events[-1][2], self.current_plan.name, self.plan_renewal_date,
-                          len(self.payments[1:]), self.payments[-1], self.spend[-1], self.refunds[-1], self.balances[-1]])
 
 
 
