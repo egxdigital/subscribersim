@@ -29,7 +29,9 @@ source env/bin/activate
 
 Clone repository
 
-```git clone https://emilledigital@bitbucket.org/emilledigital/subscribersim.git```
+```
+git clone https://emilledigital@bitbucket.org/emilledigital/subscribersim.git
+```
 
 Install dependencies
 
@@ -37,7 +39,7 @@ Install dependencies
 pip install -r requirements.txt
 ```
 
-Run
+Run tests to verify OK
 
 ```
 python test.py
@@ -47,39 +49,35 @@ python test.py
 
 Example interactions contained in subscribersim/subscribersim.py
 
-```python
-jake = models.Customer("Jake Peralta", "diehardfan", "@jakeperalta99.com")
-
-jake.select_plan(start_jak, helpers.datetime_now())
-
-jake.add_website("superdupercop.com", True, helpers.datetime_now())
-
-jake.add_website("iamjohnmclane.com", False, helpers.datetime_now())
-
-jake.add_website("iheartpuzzles.com", False, helpers.datetime_now())
-
-jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
-
-jake.move_to_plan("Plus", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 2))
-
-jake.add_website("iamjohnmclane.com", False)
-
-jake.add_website("iheartpuzzles.com", False)
-
-jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
-```
-
 Run
 
 ```
 python subscribersim/subscribersim.py
 ```
 
+or copy into module
+
+```python
+if __name__ == '__main__':
+  jake = models.Customer("Jake Peralta", "diehardfan", "@jakeperalta99.com")
+
+  jake.select_plan("Single", helpers.datetime_now())
+
+  jake.add_website("superdupercop.com", True)
+
+  jake.move_to_plan("Plus", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 2))
+
+  jake.add_website("iamjohnmclane.com", False)
+
+  jake.add_website("iheartpuzzles.com", False)
+
+  jake.print_table()
+```
+
+
 ### Documentation
 
 pydoc can be used to lookup module documentation.
-
-Run
 
 ```
 python -m pydoc test
@@ -87,7 +85,6 @@ python -m pydoc test
 
 
 ## To do
-  * Update move_to_plan website deletion logic in models.py
   * Change event tuple to namedtuple to benefit from field names in models.py
   * Initialize buffers with empty list instead of zero (will simplify references to the list) in models.py
   * Define method that allows interactive user to specify a datetime object to the second in helpers.py  

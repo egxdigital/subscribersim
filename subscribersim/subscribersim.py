@@ -30,17 +30,21 @@ if (__name__ == '__main__'):
     # Jake is not known for being good with his finances.
     jake = models.Customer("Jake Peralta", "diehardfan", "@jakeperalta99.com")
     jake.select_plan(start_jak, helpers.datetime_now())
-    jake.add_website("superdupercop.com", has_database="True")
-    jake.add_website("iamjohnmclane.com", has_database="False")
-    jake.add_website("iheartpuzzles.com", has_database="False")
+    jake.add_website("superdupercop.com", True)
+    jake.add_website("iamjohnmclane.com", False)
+    jake.add_website("iheartpuzzles.com", False)
+
+    print (jake)
+
     jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
 
     # Jake realizes he needs those sites again
     jake.move_to_plan("Plus", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 2))
-    jake.add_website("iamjohnmclane.com", has_database="False")
-    jake.add_website("iheartpuzzles.com", has_database="False")
+    jake.add_website("iamjohnmclane.com", False)
+    jake.add_website("iheartpuzzles.com", False)
 
-    # """Jake runs out of cash and decides to go back to the Single plan
+    # Jake runs out of cash and decides to go back to the Single plan
     jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
 
     jake.print_table()
+    print (jake)

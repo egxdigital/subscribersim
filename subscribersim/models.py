@@ -180,7 +180,7 @@ class Customer():
             raise Exception("move to plan")
 
 
-    def add_website(self, url, has_database, now=helpers.datetime_now()):
+    def add_website(self, url, has_database):
         """Adds a website given a domain name and a database option
 
         Args:
@@ -201,7 +201,7 @@ class Customer():
         return True
 
 
-    def remove_website(self, name, now=helpers.datetime_now()):
+    def remove_website(self, name):
         """Removes website from the list of websites given the full url
 
         Args:
