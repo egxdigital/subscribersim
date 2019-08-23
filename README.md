@@ -41,13 +41,14 @@ pip install -r requirements.txt
 
 Run tests to verify OK
 
+
 ```
 python test.py
 ```
 
 ### Example usage
 
-Example interactions contained in subscribersim/subscribersim.py
+Example interactions contained in subscribersim.py
 
 Run
 
@@ -55,7 +56,7 @@ Run
 python subscribersim/subscribersim.py
 ```
 
-or copy into module
+Sample interactions
 
 ```python
 if __name__ == '__main__':
@@ -74,6 +75,10 @@ if __name__ == '__main__':
   jake.print_table()
 ```
 
+Sample output
+
+![sample-output](https://i.ibb.co/BNk4jYQ/output.png)
+
 
 ### Documentation
 
@@ -86,14 +91,16 @@ python -m pydoc test
 
 ## To do
   * Change event tuple to namedtuple to benefit from field names in models.py
+  * Quantize dollar amounts throughout the subscribersim package with decimal library
   * Initialize buffers with empty list instead of zero (will simplify references to the list) in models.py
   * Define method that allows interactive user to specify a datetime object to the second in helpers.py  
-  * Add a few more interactions to entry point: subscribersim.py
+  * Add a few more interactions to example program: subscribersim.py
 
+---
 
 ## Authors
-* Emille G. - *Initial work* - [Twitter](http://twitter.com/emilledigital), [Blog](https://egxdigital.wordpress.com)
+  * Emille G. - *Initial work* - [Twitter](http://twitter.com/emilledigital), [Blog](https://egxdigital.wordpress.com)
 
 
 ## Acknowledgements
-- Jean-Baptiste Marchand-Arvier - *initial object oriented design*
+  - Jean-Baptiste Marchand-Arvier - *initial object oriented design*
