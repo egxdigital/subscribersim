@@ -1,3 +1,15 @@
+"""Test
+
+This module contains the unit tests for this simple subscription system.
+It uses a unittest test case and the standard entry point unittest.main().
+
+Example:
+    $ python test.py        
+
+Attributes:
+    No module level variables.
+
+"""
 import os, sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "subscribersim"))
 import unittest
