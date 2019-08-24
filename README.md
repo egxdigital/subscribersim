@@ -62,15 +62,17 @@ Sample interactions
 if __name__ == '__main__':
   jake = models.Customer("Jake Peralta", "diehardfan", "@jakeperalta99.com")
 
-  jake.select_plan("Single", helpers.datetime_now())
+  jake.select_plan("Infinite", helpers.datetime_now())
 
   jake.add_website("superdupercop.com", True)
+  
+  ...
 
+  jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
+  
   jake.move_to_plan("Plus", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 2))
-
-  jake.add_website("iamjohnmclane.com", False)
-
-  jake.add_website("iheartpuzzles.com", False)
+  
+  jake.move_to_plan("Single", helpers.datetime_months_hence(helpers.datetime_get_last_event(jake), 4))
 
   jake.print_table()
 ```
